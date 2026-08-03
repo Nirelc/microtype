@@ -1,4 +1,5 @@
-import { BaseSchema, type Schema } from "./base";
+import { BaseSchema, type Schema, type ParseResult } from "./base";
+import type { Issue } from "../utils/validation";
 import { isRecord } from "../guards/object";
 
 export class ObjectValidationError extends Error {
@@ -24,12 +25,19 @@ export class ObjectSchema<T extends ObjectEntries> extends BaseSchema<
     super();
   }
 
-  parse<I = unknown>(input: I): ObjectStatic<T> {
-    const errors: ObjectErrorItem[] = [];
+  _parse<I = unknown>(input: I): ParseResult<ObjectStatic<T>> {
     if (!isRecord(input)) {
-      throw new Error("Expected record");
+      return {
+        success: false,
+        issues: [
+          {
+            message: "Expected record",
+          },
+        ],
+      };
     }
 
+    const issues: Issue[] = [];
     const output: Record<string, unknown> = {};
     const requiredKeys = new Set(Object.keys(this.entries));
     for (const [key, schema] of Object.entries(this.entries)) {
@@ -37,21 +45,31 @@ export class ObjectSchema<T extends ObjectEntries> extends BaseSchema<
         continue;
       }
 
-      try {
-        output[key] = schema.parse(input[key]);
-      } catch (err) {
-        errors.push({
-          key,
-          error: err as Error,
-        } satisfies ObjectErrorItem);
+      const result = schema._parse(input[key]);
+      if (result.success) {
+        output[key] = result.data;
+        continue;
       }
+
+      issues.push(
+        ...result.issues.map((issue) => ({
+          ...issue,
+          path: [key, ...(issue.path ?? [])],
+        })),
+      );
     }
 
-    if (errors.length) {
-      throw new ObjectValidationError(errors);
+    if (issues.length) {
+      return {
+        success: false,
+        issues,
+      };
     }
 
-    return output as ObjectStatic<T>;
+    return {
+      success: true,
+      data: output as ObjectStatic<T>,
+    };
   }
 }
 

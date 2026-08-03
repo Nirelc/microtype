@@ -5,7 +5,7 @@ import {
   union,
   string,
   object,
-  ObjectValidationError,
+  ValidationError,
 } from "../../src/type-system";
 
 const schema = object({
@@ -49,10 +49,10 @@ describe("object", () => {
       error = err;
     }
 
-    expect(error).toBeInstanceOf(ObjectValidationError);
-    expect((error as ObjectValidationError).errors).toHaveLength(1);
-    expect((error as ObjectValidationError).errors[0]?.error).toEqual(
-      new Error("Expected 'passed'"),
+    expect(error).toBeInstanceOf(ValidationError);
+    expect((error as ValidationError).issues).toHaveLength(1);
+    expect((error as ValidationError).issues[0]?.message).toEqual(
+      "Expected 'passed'",
     );
   });
 });

@@ -1,11 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import {
-  UnionValidationError,
-  literal,
-  number,
-  union,
-} from "../../src/type-system";
+import { ValidationError, literal, number, union } from "../../src/type-system";
 
 describe("union", () => {
   test("should parse a value accepted by any member", () => {
@@ -38,11 +33,11 @@ describe("union", () => {
       error = err;
     }
 
-    expect(error).toBeInstanceOf(UnionValidationError);
-    expect((error as UnionValidationError).errors).toHaveLength(2);
-    expect((error as UnionValidationError).errors).toEqual([
-      new Error("Expected 'enabled'"),
-      new Error("Expected number"),
+    expect(error).toBeInstanceOf(ValidationError);
+    expect((error as ValidationError).issues).toHaveLength(2);
+    expect((error as ValidationError).issues).toEqual([
+      { message: "Expected 'enabled'" },
+      { message: "Expected number" },
     ]);
   });
 });

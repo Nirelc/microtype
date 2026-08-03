@@ -6,7 +6,7 @@ import {
   union,
   number,
   object,
-  ArrayValidationError,
+  ValidationError,
 } from "../../src/type-system";
 
 const simpleSchema = array(number());
@@ -51,10 +51,10 @@ describe("array", () => {
     }
 
     expect(() => simpleSchema.parse(false)).toThrow("Expected array");
-    expect(error).toBeInstanceOf(ArrayValidationError);
-    expect((error as ArrayValidationError).errors).toHaveLength(1);
-    expect((error as ArrayValidationError).errors).toEqual([
-      new Error("Expected number"),
+    expect(error).toBeInstanceOf(ValidationError);
+    expect((error as ValidationError).issues).toHaveLength(1);
+    expect((error as ValidationError).issues).toEqual([
+      { message: "Expected number", path: ["1"] },
     ]);
   });
 

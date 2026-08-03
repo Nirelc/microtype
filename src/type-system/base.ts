@@ -1,13 +1,42 @@
+import { type Issue, formatValidationMessage } from "../utils/validation";
+
+export type ParseResult<T> =
+  | {
+      success: true;
+      data: T;
+    }
+  | {
+      success: false;
+      issues: Issue[];
+    };
+
+export class ValidationError extends Error {
+  constructor(readonly issues: Issue[]) {
+    super(formatValidationMessage(issues));
+    this.name = "ValidationError";
+  }
+}
+
 export interface Schema<T = unknown> {
   readonly static: T;
   parse<I = unknown>(input: I): T;
+  _parse<I = unknown>(input: I): ParseResult<T>;
 }
 
 export type Static<T extends Schema> = T["static"];
 
 export abstract class BaseSchema<T> implements Schema<T> {
   declare readonly static: T;
-  abstract parse<I = unknown>(input: I): T;
+  abstract _parse<I = unknown>(input: I): ParseResult<T>;
+
+  parse<I = unknown>(input: I): T {
+    const result = this._parse<I>(input);
+    if (result.success) {
+      return result.data;
+    }
+
+    throw new ValidationError(result.issues);
+  }
 
   optional() {
     return new OptionalSchema(this);
@@ -23,28 +52,29 @@ export class OptionalSchema<T> extends BaseSchema<T | undefined> {
     super();
   }
 
-  parse<I = unknown>(input: I): T | undefined {
+  _parse<I = unknown>(input: I): ParseResult<T | undefined> {
     if (input === undefined) {
-      return undefined;
+      return { success: true, data: undefined };
     }
 
-    return this.inner.parse(input);
+    return this.inner._parse<I>(input);
   }
 }
 
-export class DefaultSchema<T> extends BaseSchema<Exclude<T, undefined>> {
+export type DefaultValue<T> = Exclude<T, undefined>;
+export class DefaultSchema<T> extends BaseSchema<DefaultValue<T>> {
   constructor(
     private readonly inner: Schema<T>,
-    private readonly defaultValue: Exclude<T, undefined>,
+    private readonly defaultValue: DefaultValue<T>,
   ) {
     super();
   }
 
-  parse<I = unknown>(input: I): Exclude<T, undefined> {
+  _parse<I = unknown>(input: I): ParseResult<DefaultValue<T>> {
     if (input === undefined) {
-      return this.defaultValue;
+      return { success: true, data: this.defaultValue };
     }
 
-    return this.inner.parse(input) as Exclude<T, undefined>;
+    return this.inner._parse(input) as ParseResult<DefaultValue<T>>;
   }
 }

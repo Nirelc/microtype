@@ -1,4 +1,5 @@
-import { BaseSchema, type Schema, type Static } from "./base";
+import { BaseSchema, type Schema, type Static, type ParseResult } from "./base";
+import type { Issue } from "../utils/validation";
 
 export class UnionValidationError extends Error {
   constructor(readonly errors: Error[]) {
@@ -16,18 +17,25 @@ export class UnionSchema<T extends Schema[]> extends BaseSchema<
     super();
   }
 
-  parse<I = unknown>(input: I): UnionStatic<T> {
-    const errors: Error[] = [];
+  _parse<I = unknown>(input: I): ParseResult<UnionStatic<T>> {
+    const issues: Issue[] = [];
 
     for (const schema of this.schemas) {
-      try {
-        return schema.parse(input);
-      } catch (err) {
-        errors.push(err as Error);
+      const result = schema._parse(input);
+      if (result.success) {
+        return {
+          success: true,
+          data: result.data,
+        };
       }
+
+      issues.push(...result.issues);
     }
 
-    throw new UnionValidationError(errors);
+    return {
+      success: false,
+      issues,
+    };
   }
 }
 

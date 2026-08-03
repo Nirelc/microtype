@@ -1,4 +1,4 @@
-import { run, bench, boxplot, summary } from "mitata";
+import { run, bench, boxplot, summary, do_not_optimize } from "mitata";
 
 import * as mt from "../src/type-system";
 import * as v from "valibot";
@@ -38,7 +38,7 @@ function arktypeCold(val) {
     name: "string",
     platform: "'android' | 'ios'",
     "versions?": "(number | string)[]",
-    minVer: "0 < number <= 3",
+    minVer: "0 <= number <= 3",
   });
 
   return LoginSchema(val);
@@ -81,37 +81,37 @@ boxplot(() => {
   summary(() => {
     bench("microtype [cold]", () => {
       for (const d of data) {
-        microtypeCold(d);
+        do_not_optimize(microtypeCold(d));
       }
       return true;
     });
     bench("microtype [global]", () => {
       for (const d of data) {
-        microtypeWithGlobal(d);
+        do_not_optimize(microtypeWithGlobal(d));
       }
       return true;
     });
     bench("valibot [cold]", () => {
       for (const d of data) {
-        valibotCold(d);
+        do_not_optimize(valibotCold(d));
       }
       return true;
     });
     bench("valibot [global]", () => {
       for (const d of data) {
-        valibotWithGlobal(d);
+        do_not_optimize(valibotWithGlobal(d));
       }
       return true;
     });
     bench("arktype [cold]", () => {
       for (const d of data) {
-        arktypeCold(d);
+        do_not_optimize(arktypeCold(d));
       }
       return true;
     });
     bench("arktype [global]", () => {
       for (const d of data) {
-        arktypeWithGlobal(d);
+        do_not_optimize(arktypeWithGlobal(d));
       }
       return true;
     });

@@ -1,16 +1,23 @@
-import { BaseSchema } from "./base";
+import { BaseSchema, type ParseResult } from "./base";
 
 export class LiteralSchema<T> extends BaseSchema<T> {
   constructor(private readonly expected: T) {
     super();
   }
 
-  parse<I = unknown>(input: I): T {
+  _parse<I = unknown>(input: I): ParseResult<T> {
     if (Object.is(input, this.expected)) {
-      return this.expected;
+      return { success: true, data: this.expected };
     }
 
-    throw new Error(`Expected '${this.expected}'`);
+    return {
+      success: false,
+      issues: [
+        {
+          message: `Expected '${this.expected}'`,
+        },
+      ],
+    };
   }
 }
 

@@ -1,4 +1,4 @@
-import { BaseSchema } from "./base";
+import { BaseSchema, type ParseResult } from "./base";
 
 export type NumberOptions = {
   min?: number;
@@ -13,29 +13,57 @@ export class NumberSchema extends BaseSchema<number> {
     super();
   }
 
-  parse<I = unknown>(input: I): number {
-    let value: unknown = input;
-    if (typeof value === "string" && this.opts.coerce) {
-      value = Number(value);
+  _parse<I = unknown>(input: I): ParseResult<number> {
+    let data: unknown = input;
+    if (typeof data === "string" && this.opts.coerce) {
+      data = Number(data);
     }
 
-    if (typeof value !== "number" || !Number.isFinite(value)) {
-      throw new Error("Expected number");
+    if (typeof data !== "number" || !Number.isFinite(data)) {
+      return {
+        success: false,
+        issues: [
+          {
+            message: "Expected number",
+          },
+        ],
+      };
     }
 
-    if (this.opts.integer && !Number.isInteger(value)) {
-      throw new Error("Expected integer");
+    if (this.opts.integer && !Number.isInteger(data)) {
+      return {
+        success: false,
+        issues: [
+          {
+            message: "Expected integer",
+          },
+        ],
+      };
     }
 
-    if (this.opts.min !== undefined && value < this.opts.min) {
-      throw new Error(`Must be >= ${this.opts.min}`);
+    if (this.opts.min !== undefined && data < this.opts.min) {
+      return {
+        success: false,
+        issues: [
+          {
+            message: `Must be >= ${this.opts.min}`,
+          },
+        ],
+      };
     }
 
-    if (this.opts.max !== undefined && value > this.opts.max) {
-      throw new Error(`Must be <= ${this.opts.max}`);
+    if (this.opts.max !== undefined && data > this.opts.max) {
+      return {
+        success: false,
+        issues: [
+          {
+            message: `Must be <= ${this.opts.max}`,
+          },
+        ],
+      };
     }
 
-    return value;
+    return { success: true, data };
   }
 
   max(max: number): NumberSchema {

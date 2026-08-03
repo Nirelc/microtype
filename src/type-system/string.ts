@@ -1,4 +1,4 @@
-import { BaseSchema } from "./base";
+import { BaseSchema, type ParseResult } from "./base";
 
 export type StringOptions = {
   min?: number;
@@ -11,22 +11,43 @@ export class StringSchema extends BaseSchema<string> {
     super();
   }
 
-  parse<I = unknown>(input: I): string {
-    let value = input;
-    if (typeof value !== "string") {
-      throw new Error("Expected string");
+  _parse<I = unknown>(input: I): ParseResult<string> {
+    let data = input;
+    if (typeof data !== "string") {
+      return {
+        success: false,
+        issues: [
+          {
+            message: "Expected string",
+          },
+        ],
+      };
     }
 
-    const len = value.length;
+    const len = data.length;
     if (this.opts.min !== undefined && len < this.opts.min) {
-      throw new Error(`Must be >= ${this.opts.min}`);
+      return {
+        success: false,
+        issues: [
+          {
+            message: `Must be >= ${this.opts.min}`,
+          },
+        ],
+      };
     }
 
     if (this.opts.max !== undefined && len > this.opts.max) {
-      throw new Error(`Must be <= ${this.opts.max}`);
+      return {
+        success: false,
+        issues: [
+          {
+            message: `Must be <= ${this.opts.max}`,
+          },
+        ],
+      };
     }
 
-    return value;
+    return { success: true, data };
   }
 
   max(max: number): StringSchema {

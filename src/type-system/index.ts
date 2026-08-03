@@ -5,3 +5,4 @@ export * from "./literal";
 export * from "./union";
 export * from "./object";
 export * from "./array";
+export * from "./base";
