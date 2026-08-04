@@ -6,6 +6,8 @@ import {
   string,
   object,
   ValidationError,
+  number,
+  optional,
 } from "../../src/type-system";
 
 const schema = object({
@@ -39,6 +41,38 @@ describe("object", () => {
       },
     };
     expect(bigSchema.parse(data)).toEqual(data);
+  });
+
+  test("should support optional fields", () => {
+    const schemaWithOptional = object({
+      value: string(),
+      version: number().optional(),
+      other: optional(string()),
+    });
+
+    expect(
+      schemaWithOptional.parse({
+        value: "42",
+      }),
+    ).toEqual({
+      value: "42",
+    });
+  });
+
+  test("should support default fields", () => {
+    const schemaWithOptional = object({
+      value: string(),
+      version: number().default(1),
+    });
+
+    expect(
+      schemaWithOptional.parse({
+        value: "42",
+      }),
+    ).toEqual({
+      value: "42",
+      version: 1,
+    });
   });
 
   test("should return error on invalid data", () => {
