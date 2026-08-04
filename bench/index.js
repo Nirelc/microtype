@@ -1,8 +1,11 @@
 import { run, bench, boxplot, summary, do_not_optimize } from "mitata";
 
-import * as mt from "../src/type-system";
+import * as mt from "../dist/type-system";
 import * as v from "valibot";
+import * as z from "zod";
 import { type } from "arktype";
+import tb from "typebox";
+import TBSchema from "typebox/schema";
 
 const data = Array.from({ length: 1000 }).map(() => ({
   name: crypto.randomUUID(),
@@ -44,6 +47,31 @@ function arktypeCold(val) {
   return LoginSchema(val);
 }
 
+function typeboxCold(val) {
+  const LoginSchema = tb.Object({
+    name: tb.String(),
+    platform: tb.Union([tb.Literal("android"), tb.Literal("ios")]),
+    versions: tb.Optional(tb.Array(tb.Union([tb.String(), tb.Number()]))),
+    minVer: tb.Number({
+      minimum: 0,
+      maximum: 3,
+    }),
+  });
+
+  return TBSchema.Parse(LoginSchema, val);
+}
+
+function zodCold(val) {
+  const LoginSchema = z.object({
+    name: z.string(),
+    platform: z.union([z.literal("android"), z.literal("ios")]),
+    versions: z.array(z.union([z.string(), z.number()])).optional(),
+    minVer: z.number().min(0).max(3),
+  });
+
+  return LoginSchema.parse(val);
+}
+
 const MTLoginSchemaGlobal = mt.object({
   name: mt.string(),
   platform: mt.union([mt.literal("android"), mt.literal("ios")]),
@@ -65,6 +93,25 @@ const ATLoginSchemaGlobal = type({
   minVer: "0 <= number <= 3",
 });
 
+const TBLoginSchemaGlobal = tb.Object({
+  name: tb.String(),
+  platform: tb.Union([tb.Literal("android"), tb.Literal("ios")]),
+  versions: tb.Optional(tb.Array(tb.Union([tb.String(), tb.Number()]))),
+  minVer: tb.Number({
+    minimum: 0,
+    maximum: 3,
+  }),
+});
+
+const TBLoginSchemaCompiledGlobal = TBSchema.Compile(TBLoginSchemaGlobal);
+
+const ZLoginSchemaGlobal = z.object({
+  name: z.string(),
+  platform: z.union([z.literal("android"), z.literal("ios")]),
+  versions: z.array(z.union([z.string(), z.number()])).optional(),
+  minVer: z.number().min(0).max(3),
+});
+
 function microtypeWithGlobal(val) {
   return MTLoginSchemaGlobal.parse(val);
 }
@@ -75,6 +122,18 @@ function valibotWithGlobal(val) {
 
 function arktypeWithGlobal(val) {
   return ATLoginSchemaGlobal(val);
+}
+
+function typeboxWithGlobal(val) {
+  return TBSchema.Parse(TBLoginSchemaGlobal, val);
+}
+
+function typeboxWithCompiledGlobal(val) {
+  return TBLoginSchemaCompiledGlobal.Parse(val);
+}
+
+function zodWithGlobal(val) {
+  return ZLoginSchemaGlobal.parse(val);
 }
 
 boxplot(() => {
@@ -112,6 +171,36 @@ boxplot(() => {
     bench("arktype [global]", () => {
       for (const d of data) {
         do_not_optimize(arktypeWithGlobal(d));
+      }
+      return true;
+    });
+    bench("typebox [cold]", () => {
+      for (const d of data) {
+        do_not_optimize(typeboxCold(d));
+      }
+      return true;
+    });
+    bench("typebox [global]", () => {
+      for (const d of data) {
+        do_not_optimize(typeboxWithGlobal(d));
+      }
+      return true;
+    });
+    bench("typebox [compiled][global]", () => {
+      for (const d of data) {
+        do_not_optimize(typeboxWithCompiledGlobal(d));
+      }
+      return true;
+    });
+    bench("zod [cold]", () => {
+      for (const d of data) {
+        do_not_optimize(zodCold(d));
+      }
+      return true;
+    });
+    bench("zod [global]", () => {
+      for (const d of data) {
+        do_not_optimize(zodWithGlobal(d));
       }
       return true;
     });
