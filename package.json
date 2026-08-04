@@ -1,17 +1,56 @@
 {
   "name": "@nirelc/microtype",
-  "module": "index.ts",
+  "description": "Super lightweight and simple type system library",
+  "author": "Toil",
+  "version": "0.0.1",
+  "license": "MIT",
   "type": "module",
-  "private": true,
+  "homepage": "https://github.com/nirelc/microtype#readme",
+  "bugs": {
+    "url": "https://github.com/nirelc/microtype/issues"
+  },
+  "keywords": [
+    "type",
+    "system",
+    "type-system",
+    "typings",
+    "fast",
+    "lightweight",
+    "lib"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "devDependencies": {
     "@types/bun": "latest",
-    "mitata": "^1.0.34"
+    "publint": "^0.3.23",
+    "tsdown": "^0.22.14",
+    "tsup": "^8.5.1",
+    "typescript": "^7"
   },
-  "peerDependencies": {
-    "typescript": "^5"
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
+    },
+    "./type-system": {
+      "types": "./dist/type-system/index.d.mts",
+      "import": "./dist/type-system/index.mjs"
+    },
+    "./type-system/*": {
+      "types": "./dist/type-system/*.d.mts",
+      "import": "./dist/type-system/*.mjs"
+    }
   },
-  "dependencies": {
-    "arktype": "^2.2.3",
-    "valibot": "^1.4.2"
-  }
+  "scripts": {
+    "build": "tsdown",
+    "build:bun": "bunx tsdown"
+  },
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "files": [
+    "./dist"
+  ],
+  "sideEffects": false
 }

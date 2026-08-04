@@ -1,3 +1,5 @@
+bench/sizedist
+
 .vscode
 
 # dependencies (bun install)
