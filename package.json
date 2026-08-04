@@ -25,7 +25,6 @@
     "@types/bun": "latest",
     "publint": "^0.3.23",
     "tsdown": "^0.22.14",
-    "tsup": "^8.5.1",
     "typescript": "^7"
   },
   "exports": {
