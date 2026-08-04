@@ -54,7 +54,7 @@ describe("array", () => {
     expect(error).toBeInstanceOf(ValidationError);
     expect((error as ValidationError).issues).toHaveLength(1);
     expect((error as ValidationError).issues).toEqual([
-      { message: "Expected number", path: ["1"] },
+      { message: "Expected number", path: [1] },
     ]);
   });
 

@@ -39,12 +39,15 @@ export class ObjectSchema<T extends ObjectEntries> extends BaseSchema<
         continue;
       }
 
-      issues.push(
-        ...result.issues.map((issue) => ({
-          ...issue,
-          path: [key, ...(issue.path ?? [])],
-        })),
-      );
+      for (let i = 0; i < result.issues.length; i++) {
+        const issue = result.issues[i]!;
+        if (issue.path) {
+          issue.path.unshift(key);
+        } else {
+          issue.path = [key];
+        }
+        issues.push(issue);
+      }
     }
 
     if (issues.length) {

@@ -36,7 +36,10 @@ export function formatValidationMessage(issues: readonly Issue[]): string {
     return `Validation failed: ${formatIssue(issues[0]!)}`;
   }
 
-  const details = issues.map((issue) => `  - ${formatIssue(issue)}`).join("\n");
+  let details = "";
+  for (let i = 0; i < issues.length; i++) {
+    details += `${i ? "\n" : ""}  - ${formatIssue(issues[i]!)}`;
+  }
 
   return `Validation failed with ${issues.length} issues:\n${details}`;
 }

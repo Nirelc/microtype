@@ -72,12 +72,15 @@ export class ArraySchema<T extends Schema> extends BaseSchema<ArrayStatic<T>> {
         continue;
       }
 
-      issues.push(
-        ...result.issues.map((issue) => ({
-          ...issue,
-          path: [idx, ...(issue.path ?? [])],
-        })),
-      );
+      for (let i = 0; i < result.issues.length; i++) {
+        const issue = result.issues[i]!;
+        if (issue.path) {
+          issue.path.unshift(idx);
+        } else {
+          issue.path = [idx];
+        }
+        issues.push(issue);
+      }
     }
 
     if (issues.length) {
