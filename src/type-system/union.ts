@@ -1,13 +1,6 @@
 import { BaseSchema, type Schema, type Static, type ParseResult } from "./base";
 import type { Issue } from "../utils/validation";
 
-export class UnionValidationError extends Error {
-  constructor(readonly errors: Error[]) {
-    super("Input doesn't match any union member");
-    this.name = "UnionValidationError";
-  }
-}
-
 export type UnionStatic<T extends readonly Schema[]> = Static<T[number]>;
 
 export class UnionSchema<T extends Schema[]> extends BaseSchema<

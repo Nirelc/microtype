@@ -62,7 +62,7 @@ const ATLoginSchemaGlobal = type({
   name: "string",
   platform: "'android' | 'ios'",
   "versions?": "(number | string)[]",
-  minVer: "0 < number <= 3",
+  minVer: "0 <= number <= 3",
 });
 
 function microtypeWithGlobal(val) {

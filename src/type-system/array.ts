@@ -1,13 +1,6 @@
 import { BaseSchema, type Schema, type Static, type ParseResult } from "./base";
 import type { Issue } from "../utils/validation";
 
-export class ArrayValidationError extends Error {
-  constructor(readonly errors: Error[]) {
-    super("Array validation failed");
-    this.name = "ArrayValidationError";
-  }
-}
-
 export type ArrayOptions = {
   min?: number;
   max?: number;
@@ -70,12 +63,12 @@ export class ArraySchema<T extends Schema> extends BaseSchema<ArrayStatic<T>> {
       };
     }
 
-    const output: ArrayStatic<T> = [];
+    const output: ArrayStatic<T> = new Array(len); // oxlint-disable-line no-new-array need for optimization
     const issues: Issue[] = [];
-    for (const idx in input) {
+    for (let idx = 0; idx < input.length; idx++) {
       const result = this.item._parse(input[idx]);
       if (result.success) {
-        output.push(result.data);
+        output[idx] = result.data;
         continue;
       }
 

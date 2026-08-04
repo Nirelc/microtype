@@ -1,5 +1,52 @@
+// src/utils/validation.ts
+function formatPath(path) {
+  let result = "";
+  for (const segment of path) {
+    if (typeof segment === "number") {
+      result += `[${segment}]`;
+    } else if (typeof segment === "string" && /^[A-Za-z_$][\w$]*$/.test(segment)) {
+      result += result ? `.${segment}` : segment;
+    } else {
+      result += `[${JSON.stringify(segment)}]`;
+    }
+  }
+  return result;
+}
+function formatIssue(issue) {
+  const path = formatPath(issue.path ?? []);
+  return path ? `${path}: ${issue.message}` : issue.message;
+}
+function formatValidationMessage(issues) {
+  if (issues.length === 0) {
+    return "Validation failed";
+  }
+  if (issues.length === 1) {
+    return `Validation failed: ${formatIssue(issues[0])}`;
+  }
+  const details = issues.map((issue) => `  - ${formatIssue(issue)}`).join(`
+`);
+  return `Validation failed with ${issues.length} issues:
+${details}`;
+}
+
 // src/type-system/base.ts
+class ValidationError extends Error {
+  issues;
+  constructor(issues) {
+    super(formatValidationMessage(issues));
+    this.issues = issues;
+    this.name = "ValidationError";
+  }
+}
+
 class BaseSchema {
+  parse(input) {
+    const result = this._parse(input);
+    if (result.success) {
+      return result.data;
+    }
+    throw new ValidationError(result.issues);
+  }
   optional() {
     return new OptionalSchema(this);
   }
@@ -14,11 +61,11 @@ class OptionalSchema extends BaseSchema {
     super();
     this.inner = inner;
   }
-  parse(input) {
+  _parse(input) {
     if (input === undefined) {
-      return;
+      return { success: true, data: undefined };
     }
-    return this.inner.parse(input);
+    return this.inner._parse(input);
   }
 }
 
@@ -30,11 +77,11 @@ class DefaultSchema extends BaseSchema {
     this.inner = inner;
     this.defaultValue = defaultValue;
   }
-  parse(input) {
+  _parse(input) {
     if (input === undefined) {
-      return this.defaultValue;
+      return { success: true, data: this.defaultValue };
     }
-    return this.inner.parse(input);
+    return this.inner._parse(input);
   }
 }
 
@@ -45,24 +92,52 @@ class NumberSchema extends BaseSchema {
     super();
     this.opts = opts;
   }
-  parse(input) {
-    let value = input;
-    if (typeof value === "string" && this.opts.coerce) {
-      value = Number(value);
+  _parse(input) {
+    let data = input;
+    if (typeof data === "string" && this.opts.coerce) {
+      data = Number(data);
     }
-    if (typeof value !== "number" || !Number.isFinite(value)) {
-      throw new Error("Expected number");
+    if (typeof data !== "number" || !Number.isFinite(data)) {
+      return {
+        success: false,
+        issues: [
+          {
+            message: "Expected number"
+          }
+        ]
+      };
     }
-    if (this.opts.integer && !Number.isInteger(value)) {
-      throw new Error("Expected integer");
+    if (this.opts.integer && !Number.isInteger(data)) {
+      return {
+        success: false,
+        issues: [
+          {
+            message: "Expected integer"
+          }
+        ]
+      };
     }
-    if (this.opts.min !== undefined && value < this.opts.min) {
-      throw new Error(`Must be >= ${this.opts.min}`);
+    if (this.opts.min !== undefined && data < this.opts.min) {
+      return {
+        success: false,
+        issues: [
+          {
+            message: `Must be >= ${this.opts.min}`
+          }
+        ]
+      };
     }
-    if (this.opts.max !== undefined && value > this.opts.max) {
-      throw new Error(`Must be <= ${this.opts.max}`);
+    if (this.opts.max !== undefined && data > this.opts.max) {
+      return {
+        success: false,
+        issues: [
+          {
+            message: `Must be <= ${this.opts.max}`
+          }
+        ]
+      };
     }
-    return value;
+    return { success: true, data };
   }
   max(max) {
     return new NumberSchema({ ...this.opts, max });
@@ -90,19 +165,40 @@ class StringSchema extends BaseSchema {
     super();
     this.opts = opts;
   }
-  parse(input) {
-    let value = input;
-    if (typeof value !== "string") {
-      throw new Error("Expected string");
+  _parse(input) {
+    let data = input;
+    if (typeof data !== "string") {
+      return {
+        success: false,
+        issues: [
+          {
+            message: "Expected string"
+          }
+        ]
+      };
     }
-    const len = value.length;
+    const len = data.length;
     if (this.opts.min !== undefined && len < this.opts.min) {
-      throw new Error(`Must be >= ${this.opts.min}`);
+      return {
+        success: false,
+        issues: [
+          {
+            message: `Must be >= ${this.opts.min}`
+          }
+        ]
+      };
     }
     if (this.opts.max !== undefined && len > this.opts.max) {
-      throw new Error(`Must be <= ${this.opts.max}`);
+      return {
+        success: false,
+        issues: [
+          {
+            message: `Must be <= ${this.opts.max}`
+          }
+        ]
+      };
     }
-    return value;
+    return { success: true, data };
   }
   max(max) {
     return new StringSchema({ ...this.opts, max });
@@ -121,42 +217,46 @@ class LiteralSchema extends BaseSchema {
     super();
     this.expected = expected;
   }
-  parse(input) {
+  _parse(input) {
     if (Object.is(input, this.expected)) {
-      return this.expected;
+      return { success: true, data: this.expected };
     }
-    throw new Error(`Expected '${this.expected}'`);
+    return {
+      success: false,
+      issues: [
+        {
+          message: `Expected '${this.expected}'`
+        }
+      ]
+    };
   }
 }
 function literal(expected) {
   return new LiteralSchema(expected);
 }
 // src/type-system/union.ts
-class UnionValidationError extends Error {
-  errors;
-  constructor(errors) {
-    super("Input doesn't match any union member");
-    this.errors = errors;
-    this.name = "UnionValidationError";
-  }
-}
-
 class UnionSchema extends BaseSchema {
   schemas;
   constructor(schemas) {
     super();
     this.schemas = schemas;
   }
-  parse(input) {
-    const errors = [];
+  _parse(input) {
+    const issues = [];
     for (const schema of this.schemas) {
-      try {
-        return schema.parse(input);
-      } catch (err) {
-        errors.push(err);
+      const result = schema._parse(input);
+      if (result.success) {
+        return {
+          success: true,
+          data: result.data
+        };
       }
+      issues.push(...result.issues);
     }
-    throw new UnionValidationError(errors);
+    return {
+      success: false,
+      issues
+    };
   }
 }
 function union(schemas) {
@@ -168,60 +268,52 @@ function isRecord(value) {
 }
 
 // src/type-system/object.ts
-class ObjectValidationError extends Error {
-  errors;
-  constructor(errors) {
-    super("Object validation failed");
-    this.errors = errors;
-    this.name = "ObjectValidationError";
-  }
-}
-
 class ObjectSchema extends BaseSchema {
   entries;
   constructor(entries) {
     super();
     this.entries = entries;
   }
-  parse(input) {
-    const errors = [];
+  _parse(input) {
     if (!isRecord(input)) {
-      throw new Error("Expected record");
+      return {
+        success: false,
+        issues: [
+          {
+            message: "Expected record"
+          }
+        ]
+      };
     }
+    const issues = [];
     const output = {};
-    const requiredKeys = new Set(Object.keys(this.entries));
-    for (const [key, schema] of Object.entries(this.entries)) {
-      if (!requiredKeys.has(key)) {
+    for (const key in this.entries) {
+      const result = this.entries[key]._parse(input[key]);
+      if (result.success) {
+        output[key] = result.data;
         continue;
       }
-      try {
-        output[key] = schema.parse(input[key]);
-      } catch (err) {
-        errors.push({
-          key,
-          error: err
-        });
-      }
+      issues.push(...result.issues.map((issue) => ({
+        ...issue,
+        path: [key, ...issue.path ?? []]
+      })));
     }
-    if (errors.length) {
-      throw new ObjectValidationError(errors);
+    if (issues.length) {
+      return {
+        success: false,
+        issues
+      };
     }
-    return output;
+    return {
+      success: true,
+      data: output
+    };
   }
 }
 function object(entries) {
   return new ObjectSchema(entries);
 }
 // src/type-system/array.ts
-class ArrayValidationError extends Error {
-  errors;
-  constructor(errors) {
-    super("Array validation failed");
-    this.errors = errors;
-    this.name = "ArrayValidationError";
-  }
-}
-
 class ArraySchema extends BaseSchema {
   item;
   opts;
@@ -230,33 +322,71 @@ class ArraySchema extends BaseSchema {
     this.item = item;
     this.opts = opts;
   }
-  parse(input) {
+  _parse(input) {
     if (!Array.isArray(input)) {
-      throw new Error("Expected array");
+      return {
+        success: false,
+        issues: [
+          {
+            message: "Expected array"
+          }
+        ]
+      };
     }
     const len = input.length;
     if (this.opts.length !== undefined && len !== this.opts.length) {
-      throw new Error(`Expected array with exactly ${this.opts.length} items`);
+      return {
+        success: false,
+        issues: [
+          {
+            message: `Expected array with exactly ${this.opts.length} items`
+          }
+        ]
+      };
     }
     if (this.opts.min !== undefined && len < this.opts.min) {
-      throw new Error(`Expected array with at least ${this.opts.min} items`);
+      return {
+        success: false,
+        issues: [
+          {
+            message: `Expected array with at least ${this.opts.min} items`
+          }
+        ]
+      };
     }
     if (this.opts.max !== undefined && len > this.opts.max) {
-      throw new Error(`Expected array with at most ${this.opts.max} items`);
+      return {
+        success: false,
+        issues: [
+          {
+            message: `Expected array with at most ${this.opts.max} items`
+          }
+        ]
+      };
     }
     const output = [];
-    const errors = [];
-    for (const val of input) {
-      try {
-        output.push(this.item.parse(val));
-      } catch (err) {
-        errors.push(err);
+    const issues = [];
+    for (let idx = 0;idx < input.length; idx++) {
+      const result = this.item._parse(input[idx]);
+      if (result.success) {
+        output.push(result.data);
+        continue;
       }
+      issues.push(...result.issues.map((issue) => ({
+        ...issue,
+        path: [idx, ...issue.path ?? []]
+      })));
     }
-    if (errors.length) {
-      throw new ArrayValidationError(errors);
+    if (issues.length) {
+      return {
+        success: false,
+        issues
+      };
     }
-    return output;
+    return {
+      success: true,
+      data: output
+    };
   }
   length(length) {
     return new ArraySchema(this.item, { ...this.opts, length });
@@ -282,6 +412,6 @@ var t = LoginSchema.parse({
   name: "jong doe",
   platform: "ios",
   versions: [1, 2, 3],
-  minVer: 6
+  minVer: 3
 });
 console.log(t);

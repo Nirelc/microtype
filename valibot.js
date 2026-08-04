@@ -440,6 +440,6 @@ var t = parse(LoginSchema, {
   name: "jong doe",
   platform: "ios",
   versions: [1, 2, 3],
-  minVer: 6
+  minVer: 3
 });
 console.log(t);

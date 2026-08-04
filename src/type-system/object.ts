@@ -2,13 +2,6 @@ import { BaseSchema, type Schema, type ParseResult } from "./base";
 import type { Issue } from "../utils/validation";
 import { isRecord } from "../guards/object";
 
-export class ObjectValidationError extends Error {
-  constructor(readonly errors: ObjectErrorItem[]) {
-    super("Object validation failed");
-    this.name = "ObjectValidationError";
-  }
-}
-
 export type ObjectErrorItem = {
   key: string;
   error: Error;
@@ -39,13 +32,8 @@ export class ObjectSchema<T extends ObjectEntries> extends BaseSchema<
 
     const issues: Issue[] = [];
     const output: Record<string, unknown> = {};
-    const requiredKeys = new Set(Object.keys(this.entries));
-    for (const [key, schema] of Object.entries(this.entries)) {
-      if (!requiredKeys.has(key)) {
-        continue;
-      }
-
-      const result = schema._parse(input[key]);
+    for (const key in this.entries) {
+      const result = this.entries[key]!._parse(input[key]);
       if (result.success) {
         output[key] = result.data;
         continue;
