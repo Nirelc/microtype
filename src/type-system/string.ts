@@ -59,6 +59,6 @@ export class StringSchema extends BaseSchema<string> {
   }
 }
 
-export function string(opts: StringOptions = {}) {
+export function string(opts: StringOptions = {}): StringSchema {
   return new StringSchema(opts);
 }

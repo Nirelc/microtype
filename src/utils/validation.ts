@@ -22,7 +22,7 @@ export function formatPath(path: readonly PropertyKey[]): string {
   return result;
 }
 
-export function formatIssue(issue: Issue) {
+export function formatIssue(issue: Issue): string {
   const path = formatPath(issue.path ?? []);
   return path ? `${path}: ${issue.message}` : issue.message;
 }

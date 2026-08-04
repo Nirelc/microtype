@@ -78,7 +78,7 @@ export class NumberSchema extends BaseSchema<number> {
     return new NumberSchema({ ...this.opts, coerce });
   }
 
-  integer() {
+  integer(): NumberSchema {
     return new NumberSchema({
       ...this.opts,
       integer: true,
@@ -86,10 +86,10 @@ export class NumberSchema extends BaseSchema<number> {
   }
 }
 
-export function number(opts: NumberOptions = {}) {
+export function number(opts: NumberOptions = {}): NumberSchema {
   return new NumberSchema(opts);
 }
 
-export function float() {
+export function float(): NumberSchema {
   return number();
 }

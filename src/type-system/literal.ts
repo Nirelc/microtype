@@ -21,6 +21,6 @@ export class LiteralSchema<T> extends BaseSchema<T> {
   }
 }
 
-export function literal<const T>(expected: T) {
+export function literal<const T>(expected: T): LiteralSchema<T> {
   return new LiteralSchema<T>(expected);
 }

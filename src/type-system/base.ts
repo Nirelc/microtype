@@ -38,7 +38,7 @@ export abstract class BaseSchema<T> implements Schema<T> {
     throw new ValidationError(result.issues);
   }
 
-  optional() {
+  optional(): OptionalSchema<T> {
     return new OptionalSchema(this);
   }
 

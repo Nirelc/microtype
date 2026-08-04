@@ -1,4 +1,9 @@
-import { BaseSchema, type Schema, type ParseResult } from "./base";
+import {
+  BaseSchema,
+  type Schema,
+  type ParseResult,
+  type OptionalSchema,
+} from "./base";
 import type { Issue } from "../utils/validation";
 import { isRecord } from "../guards/object";
 
@@ -7,9 +12,21 @@ export type ObjectErrorItem = {
   error: Error;
 };
 export type ObjectEntries = Record<string, Schema>;
-export type ObjectStatic<T extends ObjectEntries> = {
-  [K in keyof T]: T[K]["static"];
+
+type Simplify<T> = {
+  [K in keyof T]: T[K];
 };
+export type ObjectStatic<T extends ObjectEntries> = Simplify<
+  {
+    [
+      K in keyof T as T[K] extends OptionalSchema<any> ? never : K
+    ]-?: T[K]["static"];
+  } & {
+    [
+      K in keyof T as T[K] extends OptionalSchema<any> ? K : never
+    ]?: T[K]["static"];
+  }
+>;
 
 export class ObjectSchema<T extends ObjectEntries> extends BaseSchema<
   ObjectStatic<T>
@@ -30,7 +47,7 @@ export class ObjectSchema<T extends ObjectEntries> extends BaseSchema<
       };
     }
 
-    const issues: Issue[] = [];
+    let issues: Issue[] | undefined;
     const output: Record<string, unknown> = {};
     for (const key in this.entries) {
       const result = this.entries[key]!._parse(input[key]);
@@ -46,11 +63,11 @@ export class ObjectSchema<T extends ObjectEntries> extends BaseSchema<
         } else {
           issue.path = [key];
         }
-        issues.push(issue);
+        (issues ??= []).push(issue);
       }
     }
 
-    if (issues.length) {
+    if (issues?.length) {
       return {
         success: false,
         issues,
@@ -64,6 +81,8 @@ export class ObjectSchema<T extends ObjectEntries> extends BaseSchema<
   }
 }
 
-export function object<const T extends ObjectEntries>(entries: T) {
+export function object<const T extends ObjectEntries>(
+  entries: T,
+): ObjectSchema<T> {
   return new ObjectSchema(entries);
 }

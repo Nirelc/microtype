@@ -6,3 +6,4 @@ export * from "./union";
 export * from "./object";
 export * from "./array";
 export * from "./base";
+export * from "./optional";

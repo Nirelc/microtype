@@ -11,15 +11,12 @@ export class UnionSchema<T extends Schema[]> extends BaseSchema<
   }
 
   _parse<I = unknown>(input: I): ParseResult<UnionStatic<T>> {
-    const issues: Issue[] = [];
+    const issues: Issue[] | undefined = [];
 
     for (const schema of this.schemas) {
       const result = schema._parse(input);
       if (result.success) {
-        return {
-          success: true,
-          data: result.data,
-        };
+        return result;
       }
 
       issues.push(...result.issues);
@@ -32,6 +29,6 @@ export class UnionSchema<T extends Schema[]> extends BaseSchema<
   }
 }
 
-export function union<const T extends Schema[]>(schemas: T) {
+export function union<const T extends Schema[]>(schemas: T): UnionSchema<T> {
   return new UnionSchema(schemas);
 }

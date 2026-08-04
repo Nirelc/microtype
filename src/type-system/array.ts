@@ -64,7 +64,7 @@ export class ArraySchema<T extends Schema> extends BaseSchema<ArrayStatic<T>> {
     }
 
     const output: ArrayStatic<T> = new Array(len); // oxlint-disable-line no-new-array need for optimization
-    const issues: Issue[] = [];
+    let issues: Issue[] | undefined;
     for (let idx = 0; idx < input.length; idx++) {
       const result = this.item._parse(input[idx]);
       if (result.success) {
@@ -79,11 +79,11 @@ export class ArraySchema<T extends Schema> extends BaseSchema<ArrayStatic<T>> {
         } else {
           issue.path = [idx];
         }
-        issues.push(issue);
+        (issues ??= []).push(issue);
       }
     }
 
-    if (issues.length) {
+    if (issues?.length) {
       return {
         success: false,
         issues,
@@ -112,6 +112,6 @@ export class ArraySchema<T extends Schema> extends BaseSchema<ArrayStatic<T>> {
 export function array<const T extends Schema>(
   item: T,
   opts: ArrayOptions = {},
-) {
+): ArraySchema<T> {
   return new ArraySchema(item, opts);
 }
