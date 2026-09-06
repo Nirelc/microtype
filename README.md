@@ -127,6 +127,9 @@ type IsActive = boolean;
 
 // microtype
 const IsActiveSchema = boolean();
+
+// coerce string and number to boolean
+const IsActiveCoerceSchema = boolean().coerce(true);
 ```
 
 ### Optional
