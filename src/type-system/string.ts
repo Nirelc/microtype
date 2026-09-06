@@ -3,7 +3,6 @@ import { BaseSchema, type ParseResult } from "./base";
 export type StringOptions = {
   min?: number;
   max?: number;
-  default?: string;
 };
 
 export class StringSchema extends BaseSchema<string> {
@@ -12,8 +11,7 @@ export class StringSchema extends BaseSchema<string> {
   }
 
   _parse<I = unknown>(input: I): ParseResult<string> {
-    let data = input;
-    if (typeof data !== "string") {
+    if (typeof input !== "string") {
       return {
         success: false,
         issues: [
@@ -24,7 +22,7 @@ export class StringSchema extends BaseSchema<string> {
       };
     }
 
-    const len = data.length;
+    const len = input.length;
     if (this.opts.min !== undefined && len < this.opts.min) {
       return {
         success: false,
@@ -47,7 +45,7 @@ export class StringSchema extends BaseSchema<string> {
       };
     }
 
-    return { success: true, data };
+    return { success: true, data: input };
   }
 
   max(max: number): StringSchema {

@@ -119,6 +119,16 @@ type Username = "root";
 const UsernameSchema = literal("root");
 ```
 
+### Boolean
+
+```ts
+// typescript
+type IsActive = boolean;
+
+// microtype
+const IsActiveSchema = boolean();
+```
+
 ### Optional
 
 Supported separated type `optional(<schema>)`, also can be chained with `<schema>.optional()`

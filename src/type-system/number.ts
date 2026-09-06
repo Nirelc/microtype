@@ -4,7 +4,6 @@ export type NumberOptions = {
   min?: number;
   max?: number;
   coerce?: boolean;
-  default?: number;
   integer?: boolean;
 };
 
