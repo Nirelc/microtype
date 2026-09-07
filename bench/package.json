@@ -17,7 +17,7 @@
     "zod": "^4.5.4"
   },
   "scripts": {
-    "bench": "bun index.js",
-    "size": "bun build.ts"
+    "bench": "bun run --cwd .. build:bun && bun index.js",
+    "size": "bun run --cwd .. build:bun && bun build.ts"
   }
 }

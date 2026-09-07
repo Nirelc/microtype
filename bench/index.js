@@ -1,4 +1,4 @@
-import { run, bench, boxplot, summary, do_not_optimize } from "mitata";
+import { measure, do_not_optimize } from "mitata";
 
 import * as mt from "../dist/type-system";
 import * as v from "valibot";
@@ -14,7 +14,7 @@ const data = Array.from({ length: 1000 }).map(() => ({
   minVer: 1,
 }));
 
-function microtypeCold(val) {
+function microtypeSchemaAndParse(val) {
   const LoginSchema = mt.object({
     name: mt.string(),
     platform: mt.union([mt.literal("android"), mt.literal("ios")]),
@@ -25,7 +25,7 @@ function microtypeCold(val) {
   return LoginSchema.parse(val);
 }
 
-function valibotCold(val) {
+function valibotSchemaAndParse(val) {
   const LoginSchema = v.object({
     name: v.string(),
     platform: v.union([v.literal("android"), v.literal("ios")]),
@@ -36,7 +36,7 @@ function valibotCold(val) {
   return v.parse(LoginSchema, val);
 }
 
-function arktypeCold(val) {
+function arktypeSchemaAndParse(val) {
   const LoginSchema = type({
     name: "string",
     platform: "'android' | 'ios'",
@@ -47,7 +47,7 @@ function arktypeCold(val) {
   return LoginSchema(val);
 }
 
-function typeboxCold(val) {
+function typeboxSchemaAndParse(val) {
   const LoginSchema = tb.Object({
     name: tb.String(),
     platform: tb.Union([tb.Literal("android"), tb.Literal("ios")]),
@@ -61,7 +61,7 @@ function typeboxCold(val) {
   return TBSchema.Parse(LoginSchema, val);
 }
 
-function zodCold(val) {
+function zodSchemaAndParse(val) {
   const LoginSchema = z.object({
     name: z.string(),
     platform: z.union([z.literal("android"), z.literal("ios")]),
@@ -136,75 +136,120 @@ function zodWithGlobal(val) {
   return ZLoginSchemaGlobal.parse(val);
 }
 
-boxplot(() => {
-  summary(() => {
-    bench("microtype [cold]", () => {
-      for (const d of data) {
-        do_not_optimize(microtypeCold(d));
-      }
-      return true;
-    });
-    bench("microtype [global]", () => {
-      for (const d of data) {
-        do_not_optimize(microtypeWithGlobal(d));
-      }
-      return true;
-    });
-    bench("valibot [cold]", () => {
-      for (const d of data) {
-        do_not_optimize(valibotCold(d));
-      }
-      return true;
-    });
-    bench("valibot [global]", () => {
-      for (const d of data) {
-        do_not_optimize(valibotWithGlobal(d));
-      }
-      return true;
-    });
-    bench("arktype [cold]", () => {
-      for (const d of data) {
-        do_not_optimize(arktypeCold(d));
-      }
-      return true;
-    });
-    bench("arktype [global]", () => {
-      for (const d of data) {
-        do_not_optimize(arktypeWithGlobal(d));
-      }
-      return true;
-    });
-    bench("typebox [cold]", () => {
-      for (const d of data) {
-        do_not_optimize(typeboxCold(d));
-      }
-      return true;
-    });
-    bench("typebox [global]", () => {
-      for (const d of data) {
-        do_not_optimize(typeboxWithGlobal(d));
-      }
-      return true;
-    });
-    bench("typebox [compiled][global]", () => {
-      for (const d of data) {
-        do_not_optimize(typeboxWithCompiledGlobal(d));
-      }
-      return true;
-    });
-    bench("zod [cold]", () => {
-      for (const d of data) {
-        do_not_optimize(zodCold(d));
-      }
-      return true;
-    });
-    bench("zod [global]", () => {
-      for (const d of data) {
-        do_not_optimize(zodWithGlobal(d));
-      }
-      return true;
-    });
-  });
-});
+function benchmark(name, run) {
+  return { name, run, measurements: [] };
+}
 
-await run();
+const groups = [
+  {
+    title: "Schema creation + parse",
+    benchmarks: [
+      benchmark("microtype", () => {
+        for (const d of data) {
+          do_not_optimize(microtypeSchemaAndParse(d));
+        }
+      }),
+      benchmark("valibot", () => {
+        for (const d of data) {
+          do_not_optimize(valibotSchemaAndParse(d));
+        }
+      }),
+      benchmark("arktype", () => {
+        for (const d of data) {
+          do_not_optimize(arktypeSchemaAndParse(d));
+        }
+      }),
+      benchmark("typebox", () => {
+        for (const d of data) {
+          do_not_optimize(typeboxSchemaAndParse(d));
+        }
+      }),
+      benchmark("zod", () => {
+        for (const d of data) {
+          do_not_optimize(zodSchemaAndParse(d));
+        }
+      }),
+    ],
+  },
+  {
+    title: "Global schema",
+    benchmarks: [
+      benchmark("microtype", () => {
+        for (const d of data) {
+          do_not_optimize(microtypeWithGlobal(d));
+        }
+      }),
+      benchmark("valibot", () => {
+        for (const d of data) {
+          do_not_optimize(valibotWithGlobal(d));
+        }
+      }),
+      benchmark("arktype", () => {
+        for (const d of data) {
+          do_not_optimize(arktypeWithGlobal(d));
+        }
+      }),
+      benchmark("typebox", () => {
+        for (const d of data) {
+          do_not_optimize(typeboxWithGlobal(d));
+        }
+      }),
+      benchmark("typebox [compiled]", () => {
+        for (const d of data) {
+          do_not_optimize(typeboxWithCompiledGlobal(d));
+        }
+      }),
+      benchmark("zod", () => {
+        for (const d of data) {
+          do_not_optimize(zodWithGlobal(d));
+        }
+      }),
+    ],
+  },
+];
+
+const RUNS = 5;
+
+for (let run = 0; run < RUNS; run++) {
+  for (const group of groups) {
+    for (const benchmark of group.benchmarks) {
+      console.log(`[${run + 1}/${RUNS}] ${group.title}: ${benchmark.name}`);
+      benchmark.measurements.push((await measure(benchmark.run)).avg);
+    }
+  }
+}
+
+function formatTime(nanoseconds) {
+  if (nanoseconds >= 1e6) return `${(nanoseconds / 1e6).toFixed(2)} ms`;
+  if (nanoseconds >= 1e3) return `${(nanoseconds / 1e3).toFixed(2)} µs`;
+  return `${nanoseconds.toFixed(2)} ns`;
+}
+
+function median(values) {
+  return values.toSorted((a, b) => a - b)[Math.floor(values.length / 2)];
+}
+
+console.log(`Median of ${RUNS} runs; each iteration parses ${data.length} values.`);
+for (const group of groups) {
+  const results = group.benchmarks
+    .map((benchmark) => ({
+      name: benchmark.name,
+      median: median(benchmark.measurements),
+    }))
+    .sort((a, b) => a.median - b.median);
+
+  console.log(`\n#### ${group.title}\n`);
+  console.log("| name | median |");
+  console.log("| --- | ---: |");
+  for (const [index, result] of results.entries()) {
+    const footnote =
+      group.title === "Global schema" &&
+      ["arktype", "typebox [compiled]"].includes(result.name)
+        ? "\\*"
+        : "";
+    let name = `${result.name}${footnote}`;
+    if (result.name === "microtype") name = `**${name}**`;
+    if (index === 0) name = `_${name}_`;
+    console.log(`| ${name} | ${formatTime(result.median)} |`);
+  }
+}

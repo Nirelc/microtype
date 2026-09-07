@@ -218,30 +218,30 @@ In this benchmark, we compare microtype with other popular type system libraries
 
 The results below are from the best of 5 runs for Microtype.
 
-#### Cold start
+#### Schema creation + parse
 
-Cold start (create a new schema and parse it)
+Create a new schema and parse 1000 values
 
-| name            | avg       |
-| --------------- | --------- |
-| _**microtype**_ | 521.39 µs |
-| valibot         | 3.83 ms   |
-| typebox         | 16.85 ms  |
-| arktype         | 49.39 ms  |
-| zod             | 82.37 ms  |
+| name            |    median |
+| --------------- | --------: |
+| _**microtype**_ | 593.57 µs |
+| valibot         |   4.48 ms |
+| typebox         |  16.09 ms |
+| arktype         |  70.64 ms |
+| zod             |  82.26 ms |
 
 #### Global schema
 
-Global schema (parsing with pre-created schema)
+Global schema (parsing with pre-created schema) with parse 1000 values
 
-| name                   | avg       |
-| ---------------------- | --------- |
-| _typebox [compiled]\*_ | 25.41 µs  |
-| arktype\*              | 39.54 µs  |
-| **microtype**          | 337.07 µs |
-| valibot                | 495.82 µs |
-| zod                    | 666.84 µs |
-| typebox                | 7.54 ms   |
+| name                   |    median |
+| ---------------------- | --------: |
+| _typebox [compiled]\*_ |  21.04 µs |
+| arktype\*              |  46.64 µs |
+| **microtype**          | 423.31 µs |
+| valibot                | 522.05 µs |
+| zod                    | 615.21 µs |
+| typebox                |   9.85 ms |
 
 \* - `arktype` and `typebox [compiled]` uses precompile, because of this, it has better performance for global schema
 
@@ -249,13 +249,13 @@ Global schema (parsing with pre-created schema)
 
 We using [a micro test case](./bench/size) for create a type object schema + parse for all libs
 
-| name            | avg       |
-| --------------- | --------- |
-| _**microtype**_ | 10.5 KB   |
-| valibot         | 13.79 KB  |
-| zod             | 158.92 KB |
-| arktype         | 280.74 KB |
-| typebox         | 119.01 KB |
+| name            | unminified |  minified |     gzip |
+| --------------- | ---------: | --------: | -------: |
+| _**microtype**_ |    10.5 KB |   5.42 KB |   1.5 KB |
+| valibot         |   13.79 KB |   6.06 KB |  1.97 KB |
+| typebox         |  119.01 KB |  52.88 KB | 14.65 KB |
+| zod             |  158.92 KB |  83.35 KB | 23.12 KB |
+| arktype         |  280.74 KB | 153.44 KB | 46.68 KB |
 
 ## Why
 
