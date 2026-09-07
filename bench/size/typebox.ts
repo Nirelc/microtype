@@ -9,6 +9,7 @@ const LoginSchema = t.Object({
     minimum: 0,
     maximum: 3,
   }),
+  isActive: t.Boolean(),
 });
 
 console.log(Schema.Parse(LoginSchema, undefined));

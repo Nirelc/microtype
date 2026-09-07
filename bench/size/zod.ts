@@ -5,6 +5,7 @@ const LoginSchema = z.object({
   platform: z.union([z.literal("android"), z.literal("ios")]),
   versions: z.array(z.union([z.string(), z.number()])).optional(),
   minVer: z.number().min(0).max(3),
+  isActive: z.boolean(),
 });
 
 console.log(LoginSchema.parse(undefined));
