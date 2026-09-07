@@ -140,8 +140,21 @@ Supported separated type `optional(<schema>)`, also can be chained with `<schema
 // typescript
 type Email = string | undefined;
 
-// const EmailSchema = string().optional()
-const EmailSchema = optional(string());
+const EmailSchema = string().optional();
+// const EmailSchema = optional(string());
+```
+
+### Transform
+
+Supported separated type `transform(<schema>, <TransformFn>)`, also can be chained with `<schema>.transform(<transformFn>)`.
+
+```ts
+const StrBoolSchema = string().transform((value) =>
+  ["yes", "true", "1", "on"].includes(value.toLowerCase()),
+);
+// const StrBoolSchema = transform(string(), (value) =>
+//   ["yes", "true", "1", "on"].includes(value.toLowerCase()),
+// );
 ```
 
 ### Unions
@@ -201,17 +214,21 @@ You can run benchmarks in [bench](./bench) dir.
 
 ### Results
 
+In this benchmark, we compare microtype with other popular type system libraries: valibot, arktype, typebox, and zod.
+
+The results below are from the best of 5 runs for Microtype.
+
 #### Cold start
 
 Cold start (create a new schema and parse it)
 
 | name            | avg       |
 | --------------- | --------- |
-| _**microtype**_ | 649.81 µs |
-| valibot         | 3.23 ms   |
-| typebox         | 18.34 ms  |
-| arktype         | 47.28 ms  |
-| zod             | 94.78 ms  |
+| _**microtype**_ | 521.39 µs |
+| valibot         | 3.83 ms   |
+| typebox         | 16.85 ms  |
+| arktype         | 49.39 ms  |
+| zod             | 82.37 ms  |
 
 #### Global schema
 
@@ -219,12 +236,12 @@ Global schema (parsing with pre-created schema)
 
 | name                   | avg       |
 | ---------------------- | --------- |
-| _typebox [compiled]\*_ | 22.19 µs  |
-| arktype\*              | 35.63 µs  |
-| **microtype**          | 382.47 µs |
-| valibot                | 434.18 µs |
-| zod                    | 426.60 µs |
-| typebox                | 6.26 ms   |
+| _typebox [compiled]\*_ | 25.41 µs  |
+| arktype\*              | 39.54 µs  |
+| **microtype**          | 337.07 µs |
+| valibot                | 495.82 µs |
+| zod                    | 666.84 µs |
+| typebox                | 7.54 ms   |
 
 \* - `arktype` and `typebox [compiled]` uses precompile, because of this, it has better performance for global schema
 
@@ -234,11 +251,11 @@ We using [a micro test case](./bench/size) for create a type object schema + par
 
 | name            | avg       |
 | --------------- | --------- |
-| _**microtype**_ | 9.02 KB   |
-| valibot         | 13.69 KB  |
-| zod             | 138.03 KB |
-| arktype         | 281.49 KB |
-| typebox         | 358.11 KB |
+| _**microtype**_ | 10.5 KB   |
+| valibot         | 13.79 KB  |
+| zod             | 158.92 KB |
+| arktype         | 280.74 KB |
+| typebox         | 119.01 KB |
 
 ## Why
 

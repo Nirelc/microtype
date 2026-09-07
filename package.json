@@ -2,7 +2,7 @@
   "name": "@nirelc/microtype",
   "description": "Super lightweight and simple type system library",
   "author": "Toil",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "license": "MIT",
   "type": "module",
   "homepage": "https://github.com/nirelc/microtype#readme",

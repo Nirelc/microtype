@@ -75,6 +75,50 @@ describe("object", () => {
     });
   });
 
+  test("should support transform fields", () => {
+    const schemaWithOptional = object({
+      value: string(),
+      version: number()
+        .default(1)
+        .transform((value) => ({
+          major: value,
+          minor: 0,
+        })),
+    });
+
+    expect(
+      schemaWithOptional.parse({
+        value: "42",
+      }),
+    ).toEqual({
+      value: "42",
+      version: {
+        major: 1,
+        minor: 0,
+      },
+    });
+  });
+
+  test("should support transform root", () => {
+    const schemaWithOptional = object({
+      value: string(),
+      version: number().default(1),
+    }).transform((value) => ({
+      ...value,
+      passed: true,
+    }));
+
+    expect(
+      schemaWithOptional.parse({
+        value: "42",
+      }),
+    ).toEqual({
+      value: "42",
+      version: 1,
+      passed: true,
+    });
+  });
+
   test("should return error on invalid data", () => {
     let error: unknown;
     try {

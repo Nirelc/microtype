@@ -24,6 +24,7 @@ export interface Schema<T = unknown> {
 }
 
 export type Static<T extends Schema> = T["static"];
+export type TransformFn<T = unknown, O = unknown> = (value: T) => O;
 
 export abstract class BaseSchema<T> implements Schema<T> {
   declare readonly static: T;
@@ -44,6 +45,10 @@ export abstract class BaseSchema<T> implements Schema<T> {
 
   default(value: Exclude<T, undefined>): DefaultSchema<T> {
     return new DefaultSchema(this, value);
+  }
+
+  transform<O>(transformFn: TransformFn<T, O>): TransformSchema<T, O> {
+    return new TransformSchema(this, transformFn);
   }
 }
 
@@ -76,5 +81,26 @@ export class DefaultSchema<T> extends BaseSchema<DefaultValue<T>> {
     }
 
     return this.inner._parse(input) as ParseResult<DefaultValue<T>>;
+  }
+}
+
+export class TransformSchema<T, O> extends BaseSchema<O> {
+  constructor(
+    private readonly inner: Schema<T>,
+    private readonly transformFn: TransformFn<T, O>,
+  ) {
+    super();
+  }
+
+  _parse<I = unknown>(input: I): ParseResult<O> {
+    const data = this.inner._parse(input);
+    if (!data.success) {
+      return data;
+    }
+
+    return {
+      success: true,
+      data: this.transformFn(data.data),
+    };
   }
 }
