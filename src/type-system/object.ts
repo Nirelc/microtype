@@ -1,6 +1,7 @@
 import {
   BaseSchema,
   type Schema,
+  type Input,
   type ParseResult,
   type OptionalSchema,
 } from "./base";
@@ -28,8 +29,18 @@ export type ObjectStatic<T extends ObjectEntries> = Simplify<
   }
 >;
 
+// keys whose input accepts `undefined` (optional, default) can be omitted
+export type ObjectInput<T extends ObjectEntries> = Simplify<
+  {
+    [K in keyof T as undefined extends Input<T[K]> ? never : K]-?: Input<T[K]>;
+  } & {
+    [K in keyof T as undefined extends Input<T[K]> ? K : never]?: Input<T[K]>;
+  }
+>;
+
 export class ObjectSchema<T extends ObjectEntries> extends BaseSchema<
-  ObjectStatic<T>
+  ObjectStatic<T>,
+  ObjectInput<T>
 > {
   constructor(private readonly entries: T) {
     super();

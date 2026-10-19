@@ -2,7 +2,7 @@
   "name": "@nirelc/microtype",
   "description": "Super lightweight and simple type system library",
   "author": "Toil",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "license": "MIT",
   "type": "module",
   "homepage": "https://github.com/nirelc/microtype#readme",
@@ -23,8 +23,8 @@
   },
   "devDependencies": {
     "@types/bun": "latest",
-    "publint": "^0.3.24",
-    "tsdown": "^0.23.0",
+    "publint": "^0.3.25",
+    "tsdown": "^0.23.1",
     "typescript": "^7.0.2"
   },
   "exports": {

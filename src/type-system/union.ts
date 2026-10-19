@@ -1,10 +1,18 @@
-import { BaseSchema, type Schema, type Static, type ParseResult } from "./base";
+import {
+  BaseSchema,
+  type Schema,
+  type Static,
+  type Input,
+  type ParseResult,
+} from "./base";
 import type { Issue } from "../utils/validation";
 
 export type UnionStatic<T extends readonly Schema[]> = Static<T[number]>;
+export type UnionInput<T extends readonly Schema[]> = Input<T[number]>;
 
 export class UnionSchema<T extends Schema[]> extends BaseSchema<
-  UnionStatic<T>
+  UnionStatic<T>,
+  UnionInput<T>
 > {
   constructor(private readonly schemas: T) {
     super();

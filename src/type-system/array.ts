@@ -1,4 +1,10 @@
-import { BaseSchema, type Schema, type Static, type ParseResult } from "./base";
+import {
+  BaseSchema,
+  type Schema,
+  type Static,
+  type Input,
+  type ParseResult,
+} from "./base";
 import type { Issue } from "../utils/validation";
 
 export type ArrayOptions = {
@@ -8,8 +14,12 @@ export type ArrayOptions = {
 };
 
 export type ArrayStatic<T extends Schema> = Static<T>[];
+export type ArrayInput<T extends Schema> = Input<T>[];
 
-export class ArraySchema<T extends Schema> extends BaseSchema<ArrayStatic<T>> {
+export class ArraySchema<T extends Schema> extends BaseSchema<
+  ArrayStatic<T>,
+  ArrayInput<T>
+> {
   constructor(
     private readonly item: T,
     private readonly opts: ArrayOptions = {},

@@ -9,3 +9,4 @@ export * from "./array";
 export * from "./base";
 export * from "./optional";
 export * from "./transform";
+export type { StandardSchemaV1 } from "../standard-schema";

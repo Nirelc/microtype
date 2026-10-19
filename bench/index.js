@@ -214,7 +214,7 @@ for (let run = 0; run < RUNS; run++) {
   for (const group of groups) {
     for (const benchmark of group.benchmarks) {
       console.log(`[${run + 1}/${RUNS}] ${group.title}: ${benchmark.name}`);
-      benchmark.measurements.push((await measure(benchmark.run)).avg);
+      benchmark.measurements.push((await measure(benchmark.run, { min_cpu_time: 200e6 })).avg);
     }
   }
 }
@@ -243,8 +243,7 @@ for (const group of groups) {
   console.log("| --- | ---: |");
   for (const [index, result] of results.entries()) {
     const footnote =
-      group.title === "Global schema" &&
-      ["arktype", "typebox [compiled]"].includes(result.name)
+      group.title === "Global schema" && ["arktype", "typebox [compiled]"].includes(result.name)
         ? "\\*"
         : "";
     let name = `${result.name}${footnote}`;

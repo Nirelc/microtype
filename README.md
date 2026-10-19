@@ -208,6 +208,32 @@ const VersionsSchema = object({
 });
 ```
 
+## Standard Schema
+
+All schemas implement [Standard Schema](https://standardschema.dev), so they can be passed directly to libraries that accept it (Elysia, tRPC, Hono, TanStack Form, react-hook-form, etc.)
+
+```ts
+import {
+  object,
+  string,
+  number,
+  type Input,
+  type Output,
+} from "@nirelc/microtype";
+
+const UserSchema = object({
+  username: string(),
+  version: number().default(1),
+});
+
+type UserInput = Input<typeof UserSchema>; // { username: string; version?: number | undefined }
+type UserOutput = Output<typeof UserSchema>; // { username: string; version: number }
+
+// or use the Standard Schema interface directly
+const result = UserSchema["~standard"].validate({ username: "system" });
+// { value: { username: "system", version: 1 } } or { issues: [{ message, path }] }
+```
+
 ## Benchmarks
 
 You can run benchmarks in [bench](./bench) dir.
@@ -224,11 +250,11 @@ Create a new schema and parse 1000 values
 
 | name            |    median |
 | --------------- | --------: |
-| _**microtype**_ | 593.57 µs |
-| valibot         |   4.48 ms |
-| typebox         |  16.09 ms |
-| arktype         |  70.64 ms |
-| zod             |  82.26 ms |
+| _**microtype**_ | 595.65 µs |
+| valibot         |   2.30 ms |
+| typebox         |  12.17 ms |
+| zod             |  67.36 ms |
+| arktype         |  94.95 ms |
 
 #### Global schema
 
@@ -236,12 +262,12 @@ Global schema (parsing with pre-created schema) with parse 1000 values
 
 | name                   |    median |
 | ---------------------- | --------: |
-| _typebox [compiled]\*_ |  21.04 µs |
-| arktype\*              |  46.64 µs |
-| **microtype**          | 423.31 µs |
-| valibot                | 522.05 µs |
-| zod                    | 615.21 µs |
-| typebox                |   9.85 ms |
+| _typebox [compiled]\*_ |  19.20 µs |
+| arktype\*              |  37.36 µs |
+| **microtype**          | 366.14 µs |
+| zod                    | 505.66 µs |
+| valibot                | 533.27 µs |
+| typebox                |   7.25 ms |
 
 \* - `arktype` and `typebox [compiled]` uses precompile, because of this, it has better performance for global schema
 
@@ -249,13 +275,13 @@ Global schema (parsing with pre-created schema) with parse 1000 values
 
 We using [a micro test case](./bench/size) for create a type object schema + parse for all libs
 
-| name            | unminified |  minified |     gzip |
-| --------------- | ---------: | --------: | -------: |
-| _**microtype**_ |    10.5 KB |   5.42 KB |   1.5 KB |
-| valibot         |   13.79 KB |   6.06 KB |  1.97 KB |
-| typebox         |  119.01 KB |  52.88 KB | 14.65 KB |
-| zod             |  158.92 KB |  83.35 KB | 23.12 KB |
-| arktype         |  280.74 KB | 153.44 KB | 46.68 KB |
+| name            | unminified | minified |     gzip |
+| --------------- | ---------: | -------: | -------: |
+| _**microtype**_ |   10.75 KB |  5.56 KB |  1.57 KB |
+| valibot         |   13.17 KB |  5.81 KB |  1.96 KB |
+| typebox         |  110.37 KB |    48 KB | 13.69 KB |
+| zod             |  166.69 KB | 86.92 KB | 24.71 KB |
+| arktype         |  284.33 KB | 155.4 KB | 47.22 KB |
 
 ## Why
 
